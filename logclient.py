@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 '''
 Created on 2014-12-17
-
 @author: yao
 '''
 
@@ -14,23 +13,30 @@ import re
 class Upload():
     def __init__(self):
         pass
-    def main(self,files,path,isdel): 
+    def main(self,files,path,isdel):
         try:
             ftp = ftplib.FTP()
-            ftp.connect("10.22.22.79",21)
-            ftp.login("1", "1")
+            ftp.connect("192.168.148.19",21)
+            ftp.login("logback", "logback")
         except:
             return "ftp connect fail."
             sys.exit()
         filename = os.path.basename(files)
         try:
             ftp.mkd(path)
-        except:
-            pass
-        ftp.cwd(path)
-        file_handler = open(files,'rb')
-        bufsize = 1024
+        except Exception,e:
+            if str(e) == "550 Create directory operation failed.":
+                return "Create directory operation fail."
+            else:
+                pass
         try:
+            ftp.cwd(path)
+        except ftplib.error_perm:
+            ftp.quit()
+            return "Change directory operation fail."
+        try:
+            file_handler = open(files,'rb')
+            bufsize = 1024
             ftp.storbinary("STOR "+filename,file_handler,bufsize)
             file_handler.close()
             ftp.quit()
@@ -40,6 +46,7 @@ class Upload():
                 pass
             return "%s ftp file sucess." % files
         except Exception,e:
+            #print e
             return "reicve file %s fail." % files
             ftp.quit()
             #sys.exit()
@@ -47,7 +54,7 @@ class Upload():
 def compress(logpath,backpath,isdel):
     path = os.path.dirname(logpath)
     filename = re.sub('\*','',os.path.basename(logpath))
-    cmd = "ls %s |grep -v gz$|grep %s|wc -l" % (path,filename)
+    cmd = "ls %s |grep %s|wc -l" % (path,filename)
     num = os.popen(cmd).readlines()[0].strip('\r\n')
     if int(num) != 0:
         cmd = "ls %s|grep -v gz$|xargs -I {} gzip {}" % logpath

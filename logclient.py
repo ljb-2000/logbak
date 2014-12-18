@@ -16,7 +16,7 @@ class Upload():
     def main(self,files,path,isdel):
         try:
             ftp = ftplib.FTP()
-            ftp.connect("192.168.148.19",21)
+            ftp.connect("192.168.1.1",21)
             ftp.login("logback", "logback")
         except:
             return "ftp connect fail."

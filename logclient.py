@@ -3,46 +3,50 @@
 '''
 Created on 2014-12-17
 
-@author: YAO
+@author: yao
 '''
 
 import ftplib
 import os
 import sys
+import re
 
-def upload(files,path,isdel):
-    try:
-        ftp = ftplib.FTP()
-        ftp.connect("10.22.23.192",21)
-        ftp.login("1", "1")
-    except:
-        print "ftp can not connect."
-        sys.exit()
-    filename = os.path.basename(files)
-    try:
-        ftp.mkd(path)
-    except:
+class Upload():
+    def __init__(self):
         pass
-    ftp.cwd(path)
-    file_handler = open(files,'rb')
-    bufsize = 1024
-    try:
-        ftp.storbinary("STOR "+filename,file_handler,bufsize)
-        file_handler.close()
-        print "%s ftp file sucess." % files
-        ftp.quit()
-        if int(isdel) == 1:
-            delete(files)
-        else:
+    def main(self,files,path,isdel): 
+        try:
+            ftp = ftplib.FTP()
+            ftp.connect("10.22.22.79",21)
+            ftp.login("1", "1")
+        except:
+            return "ftp connect fail."
+            sys.exit()
+        filename = os.path.basename(files)
+        try:
+            ftp.mkd(path)
+        except:
             pass
-    except:
-        print "reicve file %s fail." % files
-        ftp.quit()
-        #sys.exit()
+        ftp.cwd(path)
+        file_handler = open(files,'rb')
+        bufsize = 1024
+        try:
+            ftp.storbinary("STOR "+filename,file_handler,bufsize)
+            file_handler.close()
+            ftp.quit()
+            if int(isdel) == 1:
+                delete(files)
+            else:
+                pass
+            return "%s ftp file sucess." % files
+        except Exception,e:
+            return "reicve file %s fail." % files
+            ftp.quit()
+            #sys.exit()
 
 def compress(logpath,backpath,isdel):
     path = os.path.dirname(logpath)
-    filename = os.path.basename(logpath)
+    filename = re.sub('\*','',os.path.basename(logpath))
     cmd = "ls %s |grep -v gz$|grep %s|wc -l" % (path,filename)
     num = os.popen(cmd).readlines()[0].strip('\r\n')
     if int(num) != 0:
@@ -50,9 +54,13 @@ def compress(logpath,backpath,isdel):
         os.popen(cmd)
         cmd = "ls %s*" % logpath
         filelist = os.popen(cmd).readlines()
+        s = ""
         for files in filelist:
             filename = files.strip('\r\n')
-            upload(filename,backpath,isdel)
+            up = Upload()
+            ret = up.main(filename,backpath,isdel)
+            s+=ret
+        print s
     else:
         print "%s not exist." % logpath
 

@@ -3,7 +3,7 @@
 '''
 Created on 2014-12-17
 
-@author: 11113072
+@author: YAO
 '''
 
 import ftplib
@@ -43,12 +43,12 @@ def upload(files,path,isdel):
 def compress(logpath,backpath,isdel):
     path = os.path.dirname(logpath)
     filename = os.path.basename(logpath)
-    cmd = "ls %s |grep %s|wc -l" % (path,filename)
+    cmd = "ls %s |grep -v gz$|grep %s|wc -l" % (path,filename)
     num = os.popen(cmd).readlines()[0].strip('\r\n')
     if int(num) != 0:
-        cmd = "ls %s|xargs -I {} gzip {}" % logpath
+        cmd = "ls %s|grep -v gz$|xargs -I {} gzip {}" % logpath
         os.popen(cmd)
-        cmd = "ls %s" % logpath
+        cmd = "ls %s*" % logpath
         filelist = os.popen(cmd).readlines()
         for files in filelist:
             filename = files.strip('\r\n')
@@ -62,13 +62,9 @@ def delete(logpath):
 
 if __name__ == "__main__":
     if len(sys.argv) == 4:
-        #logpath = sys.argv[1]
-        #backpath = sys.argv[2]
-        #isdel = sys.argv[3]
-        logpath = '/root/logbak/*$(date +%Y-%m-%d-%H -d "-1 hour")*'
-        #logpath = '/root/logbak/*_message.log.$(date -d yesterday +%Y%m%d)*'
-        backpath = '1/1'
-        isdel = 2
+        logpath = sys.argv[1]
+        backpath = sys.argv[2]
+        isdel = sys.argv[3]
         compress(logpath,backpath,isdel)
     else:
         print "argvs has problem."

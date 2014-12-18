@@ -1,0 +1,37 @@
+CREATE TABLE `logback` (
+`logback_id`  int(8) NOT NULL AUTO_INCREMENT ,
+`logback_ip`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+`logback_path`  varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+`logback_regular`  varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+`logback_rate`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+`logback_isdel`  tinyint(1) NOT NULL ,
+`logback_store`  int(4) NOT NULL ,
+`logback_status`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+`logback_des`  varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
+PRIMARY KEY (`logback_id`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci
+AUTO_INCREMENT=1
+CHECKSUM=0
+ROW_FORMAT=DYNAMIC
+DELAY_KEY_WRITE=0
+;
+
+
+CREATE TABLE `logbacktask` (
+`logbacktask_id`  int(8) NOT NULL AUTO_INCREMENT ,
+`logbacktask_logbackid`  int(8) NOT NULL ,
+`logbacktask_addtime`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+`logbacktask_upddate`  datetime NULL DEFAULT NULL ,
+`logbacktask_status`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+`logbacktask_des`  varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
+PRIMARY KEY (`logbacktask_id`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci
+AUTO_INCREMENT=1
+CHECKSUM=0
+ROW_FORMAT=DYNAMIC
+DELAY_KEY_WRITE=0
+;

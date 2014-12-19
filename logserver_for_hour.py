@@ -1,11 +1,10 @@
 #!/usr/bin/python2.6
 #-*- coding: utf-8 -*-
-
 '''
 Created on 2014-12-18
-
 @author: yao
 '''
+
 import threading
 import sys
 reload(sys)
@@ -16,21 +15,23 @@ import re
 import time
 import json
 
-client = "logclient20141217.py"
-
+newclient = "logclient20141219.py"
+oldclient = "logclient20141218.py"
 class LogBak():
     def __init__(self):
         self.sndb = Db()
     def main(self,ip,path,regular,isdel,lbtid):
         #验证是否有client脚本
-        cmd = """ ssh root@%s "cd /opt;ls -l |grep -w '%s'|wc -l" """ % (ip,client)
+        cmd = """ ssh root@%s "cd /root;ls -l |grep -w '%s'|wc -l" """ % (ip,newclient)
         ret = os.popen(cmd).readlines()[0].strip('\r\n')
         if int(ret) == 1:
             pass
         else:
-            cmd = """ scp %s root@%s:/opt/ """ % (client,ip)
+            cmd = """ ssh root@%s "cd /root;rm -fr %s" """  % (ip,oldclient)
             os.popen(cmd)
-            cmd = """ ssh root@%s "cd /opt;chmod +x %s" """ % (ip,client)
+            cmd = """ scp %s root@%s:/root/ """ % (newclient,ip)
+            os.popen(cmd)
+            cmd = """ ssh root@%s "cd /root;chmod 700 %s" """ % (ip,newclient)
             os.popen(cmd)
         #获取软件类型和系统名称
         cmd = """ curl -s http://itsm.cnsuning.com/traffic-web-in/XOpenApi/ipToSoftStaff.htm?ip=%s """ % ip
@@ -40,11 +41,9 @@ class LogBak():
         if systemname != "" and softtype != "":
             logpath = path+"/"+regular
             rq =  time.strftime('%Y-%m-%d',time.localtime(time.time()) )
-            #拼出备份路径
-            backuppath = systemname+"/"+rq+"/"+softtype+"/"+ip+"/"
-            #print logpath,backuppath,isdel
-            cmd = """ssh root@%s "cd /opt;./%s '%s' %s %s" """ % (ip,client,logpath,backuppath,isdel)
-            ret = str(os.popen(cmd).readlines()[0].strip('\r\n'))
+            backuppath = systemname+"/"+rq+"/"+softtype+"/"+ip
+            cmd = """ ssh root@%s "cd /root;./%s '%s' %s %s" """ % (ip,newclient,logpath,backuppath,isdel)
+            ret = ip+" "+str(os.popen(cmd).readlines()[0].strip('\r\n'))
             if not re.search('fail',ret) and not re.search('exist',ret) and not re.search('problem',ret):
                 sql = "update sn_logbacktask set logbacktask_upddate = now(),logbacktask_status = '成功',logbacktask_des = '%s' where logbacktask_id = '%s' " % (ret,lbtid)
                 ret = self.sndb.updateInfo(sql)
@@ -60,7 +59,7 @@ class LogBak():
                 else:
                     print "%s 更新失败" % lbtid
         else:
-            msg = "systemname:%s---softtype:%s" % (systemname,softtype)
+            msg = "%s systemname:%s---softtype:%s" % (ip,systemname,softtype)
             sql = " update sn_logbacktask set logbacktask_upddate = now(),logbacktask_status = '失败',logbacktask_des = '%s' where logbacktask_id = '%s' " % (msg,lbtid)
             ret = self.sndb.updateInfo(sql)
             if ret == "U-SUCESS":
@@ -81,10 +80,8 @@ class LogBakThread(threading.Thread):
         with self.threadingSum:
             inst = LogBak()
             inst.main(self.ip,self.path,self.regular,self.isdel,self.lbtid)
-
-
 if __name__ == '__main__':
-    threadingSum = threading.Semaphore(10)
+    threadingSum = threading.Semaphore(1)
     conn = Db()
     #初始化
     sql = "insert into sn_logbacktask (logbacktask_logbackid,logbacktask_status)  \

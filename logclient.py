@@ -23,17 +23,19 @@ class Upload():
             sys.exit()
         filename = os.path.basename(files)
         try:
-            ftp.mkd(path)
+            for p in path.split('/')
+                ftp.mkd(path)
+                ftp.cwd(path)
         except Exception,e:
             if str(e) == "550 Create directory operation failed.":
                 return "Create directory operation fail."
             else:
                 pass
-        try:
-            ftp.cwd(path)
-        except ftplib.error_perm:
-            ftp.quit()
-            return "Change directory operation fail."
+        #try:
+            #ftp.cwd(path)
+        #except ftplib.error_perm:
+            #ftp.quit()
+            #return "Change directory operation fail."
         try:
             file_handler = open(files,'rb')
             bufsize = 1024

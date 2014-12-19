@@ -13,45 +13,43 @@ import re
 class Upload():
     def __init__(self):
         pass
-    def main(self,files,path,isdel):
+    def main(self,filelist,path,isdel):
         try:
             ftp = ftplib.FTP()
             ftp.connect("192.168.1.1",21)
             ftp.login("logback", "logback")
         except:
             return "ftp connect fail."
-            sys.exit()
-        filename = os.path.basename(files)
         try:
-            for p in path.split('/')
-                ftp.mkd(path)
-                ftp.cwd(path)
+            for p in path.split('/'):
+                try:
+                    ftp.mkd(p)
+                    ftp.cwd(p)
+                except Exception,e:
+                    ftp.cwd(p)
         except Exception,e:
             if str(e) == "550 Create directory operation failed.":
                 return "Create directory operation fail."
             else:
                 pass
-        #try:
-            #ftp.cwd(path)
-        #except ftplib.error_perm:
-            #ftp.quit()
-            #return "Change directory operation fail."
+        ret = ""
         try:
-            file_handler = open(files,'rb')
-            bufsize = 1024
-            ftp.storbinary("STOR "+filename,file_handler,bufsize)
-            file_handler.close()
-            ftp.quit()
-            if int(isdel) == 1:
-                delete(files)
-            else:
-                pass
-            return "%s ftp file sucess." % files
+            for files in filelist:
+                f = files.strip('\r\n')
+                filename = os.path.basename(f)
+                file_handler = open(f,'rb')
+                bufsize = 1024
+                ftp.storbinary("STOR "+filename,file_handler,bufsize)
+                file_handler.close()
+                ret+="%s sucess." % f
+                if int(isdel) == 1:
+                    delete(f)
+                else:
+                    pass
         except Exception,e:
-            #print e
-            return "reicve file %s fail." % files
-            ftp.quit()
-            #sys.exit()
+            ret+="%s fail." % f
+        ftp.quit()
+        return ret
 
 def compress(logpath,backpath,isdel):
     path = os.path.dirname(logpath)
@@ -63,13 +61,9 @@ def compress(logpath,backpath,isdel):
         os.popen(cmd)
         cmd = "ls %s*" % logpath
         filelist = os.popen(cmd).readlines()
-        s = ""
-        for files in filelist:
-            filename = files.strip('\r\n')
-            up = Upload()
-            ret = up.main(filename,backpath,isdel)
-            s+=ret
-        print s
+        up = Upload()
+        ret = up.main(filelist,backpath,isdel)
+        print ret
     else:
         print "%s not exist." % logpath
 
